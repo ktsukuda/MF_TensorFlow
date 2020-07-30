@@ -4,10 +4,11 @@ import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
 
 import data
+import evaluation
 from MF import MF
 
 
-def train(model, data_splitter, batch_size, config):
+def train(model, data_splitter, validation_data, batch_size, config):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for epoch in range(config.getint('MODEL', 'epoch')):
@@ -20,7 +21,8 @@ def train(model, data_splitter, batch_size, config):
                     sess, get_feed_dict(model, train_data, start, start + batch_size))
                 start += batch_size
                 total_loss += loss
-            print('[Epoch {}] Loss = {:.2f}'.format(epoch, total_loss))
+            hit_ratio, ndcg = evaluation.evaluate(model, sess, validation_data, config.getint('EVALUATION', 'top_k'))
+            print('[Epoch {}] Loss = {:.2f}, HR = {:.4f}, NDCG = {:.4f}'.format(epoch, total_loss, hit_ratio, ndcg))
 
 
 def get_feed_dict(model, train_data, start, end):
@@ -46,7 +48,7 @@ def main():
                     print('batch_size = {}, lr = {}, latent_dim = {}, l2_weight = {}'.format(
                         batch_size, lr, latent_dim, l2_weight))
                     model = MF(data_splitter.n_user, data_splitter.n_item, lr, latent_dim, l2_weight)
-                    train(model, data_splitter, batch_size, config)
+                    train(model, data_splitter, validation_data, batch_size, config)
 
 
 if __name__ == "__main__":
