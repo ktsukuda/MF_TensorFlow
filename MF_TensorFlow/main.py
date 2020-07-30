@@ -1,5 +1,7 @@
 import os
 import json
+import math
+from progressbar import ProgressBar
 import configparser
 import numpy as np
 import tensorflow.compat.v1 as tf
@@ -20,16 +22,18 @@ def train(result_dir, model, data_splitter, validation_data, batch_size, config)
             total_loss = 0
             train_data = data_splitter.make_train_data(config.getint('MODEL', 'n_negative'))
             np.random.shuffle(train_data)
+            pb = ProgressBar(1, math.ceil(len(train_data)/batch_size))
             while start < len(train_data):
                 _, loss = model.train(
                     sess, get_feed_dict(model, train_data, start, start + batch_size))
                 start += batch_size
                 total_loss += loss
+                pb.update(start // batch_size)
             hit_ratio, ndcg = evaluation.evaluate(model, sess, validation_data, config.getint('EVALUATION', 'top_k'))
             epoch_data.append({'epoch': epoch, 'loss': total_loss, 'HR': hit_ratio, 'NDCG': ndcg})
             if ndcg > best_ndcg:
                 tf.train.Saver().save(sess, os.path.join(result_dir, 'model'))
-            print('[Epoch {}] Loss = {:.2f}, HR = {:.4f}, NDCG = {:.4f}'.format(epoch, total_loss, hit_ratio, ndcg))
+            print('\n[Epoch {}] Loss = {:.2f}, HR = {:.4f}, NDCG = {:.4f}'.format(epoch, total_loss, hit_ratio, ndcg))
     return epoch_data
 
 
