@@ -85,6 +85,7 @@ def main():
                     result_dir = "data/train_result/batch_size_{}-lr_{}-latent_dim_{}-l2_weight_{}-epoch_{}-n_negative_{}-top_k_{}".format(
                         batch_size, lr, latent_dim, l2_weight, config['MODEL']['epoch'], config['MODEL']['n_negative'], config['EVALUATION']['top_k'])
                     os.makedirs(result_dir, exist_ok=True)
+                    tf.reset_default_graph()
                     model = MF(data_splitter.n_user, data_splitter.n_item, lr, latent_dim, l2_weight)
                     epoch_data = train(result_dir, model, data_splitter, validation_data, batch_size, config)
                     save_train_result(result_dir, epoch_data)
