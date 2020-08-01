@@ -67,6 +67,7 @@ def find_best_model(config, n_user, n_item):
                             best_ndcg = ndcg
                             best_params = {
                                 'batch_size': batch_size, 'lr': lr, 'latent_dim': latent_dim, 'l2_weight': l2_weight}
+                            tf.reset_default_graph()
                             best_model = MF(n_user, n_item, lr, latent_dim, l2_weight)
                             best_model_dir = result_dir
     return best_model, best_model_dir, best_params
